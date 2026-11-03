@@ -13,10 +13,10 @@ return new class extends Migration
             $table->string('title');
             $table->text('description')->nullable();
             $table->decimal('price', 10, 2);
-            $table->integer('stock');
+            $table->unsignedInteger('stock')->default(0);
             $table->string('cover_photo')->nullable();
-            $table->unsignedBigInteger('genre_id')->nullable();
-            $table->unsignedBigInteger('author_id');
+            $table->foreignId('genre_id')->constrained()->restrictOnDelete();
+            $table->foreignId('author_id')->constrained()->restrictOnDelete();
             $table->timestamps();
         });
     }

@@ -3,96 +3,51 @@
 namespace App\Http\Controllers;
 
 use App\Models\Genre;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class GenreController extends Controller
 {
-    public function index()
+    public function index(): JsonResponse
     {
-        $genres = Genre::all();
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Get All Resource',
-            'data'    => $genres
-        ], 200);
+        return $this->sukses(Genre::orderBy('name')->get(), 'Get All Resource');
     }
 
-    public function store(Request $request)
+    public function show(Genre $genre): JsonResponse
     {
-        $validated = $request->validate([
-            'name'        => 'required|string',
+        return $this->sukses($genre, 'Get Detail Resource');
+    }
+
+    public function store(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'name'        => 'required|string|max:255',
             'description' => 'nullable|string',
         ]);
 
-        $genre = Genre::create($validated);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Resource created successfully',
-            'data'    => $genre
-        ], 201);
+        return $this->sukses(Genre::create($data), 'Resource created successfully', 201);
     }
 
-    public function show($id)
+    public function update(Request $request, Genre $genre): JsonResponse
     {
-        $genre = Genre::find($id);
-
-        if (!$genre) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Resource not found'
-            ], 404);
-        }
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Get Detail Resource',
-            'data'    => $genre
-        ], 200);
-    }
-
-    public function update(Request $request, $id)
-    {
-        $genre = Genre::find($id);
-
-        if (!$genre) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Resource not found'
-            ], 404);
-        }
-
-        $validated = $request->validate([
-            'name'        => 'required|string',
+        $data = $request->validate([
+            'name'        => 'required|string|max:255',
             'description' => 'nullable|string',
         ]);
 
-        $genre->update($validated);
+        $genre->update($data);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Resource updated successfully',
-            'data'    => $genre
-        ], 200);
+        return $this->sukses($genre, 'Resource updated successfully');
     }
 
-    public function destroy($id)
+    public function destroy(Genre $genre): JsonResponse
     {
-        $genre = Genre::find($id);
-
-        if (!$genre) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Resource not found'
-            ], 404);
+        if ($genre->books()->exists()) {
+            return $this->gagal('Genre masih dipakai oleh buku, tidak bisa dihapus.', 409);
         }
 
         $genre->delete();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Resource deleted successfully'
-        ], 200);
+        return $this->sukses(null, 'Resource deleted successfully');
     }
 }

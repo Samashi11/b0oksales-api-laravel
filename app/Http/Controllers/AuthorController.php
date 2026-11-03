@@ -3,94 +3,53 @@
 namespace App\Http\Controllers;
 
 use App\Models\Author;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class AuthorController extends Controller
-{    public function index()
+{
+    public function index(): JsonResponse
     {
-        $authors = Author::all();
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Get All Resource',
-            'data'    => $authors
-        ], 200);
+        return $this->sukses(Author::orderBy('name')->get(), 'Get All Resource');
     }
-    public function store(Request $request)
+
+    public function show(Author $author): JsonResponse
     {
-        $validated = $request->validate([
-            'name'  => 'required|string',
-            'photo' => 'nullable|string',
+        return $this->sukses($author, 'Get Detail Resource');
+    }
+
+    public function store(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'name'  => 'required|string|max:255',
+            'photo' => 'nullable|string|max:255',
             'bio'   => 'nullable|string',
         ]);
 
-        $author = Author::create($validated);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Resource created successfully',
-            'data'    => $author
-        ], 201);
+        return $this->sukses(Author::create($data), 'Resource created successfully', 201);
     }
-    public function show($id)
+
+    public function update(Request $request, Author $author): JsonResponse
     {
-        $author = Author::find($id);
-
-        if (!$author) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Resource not found'
-            ], 404);
-        }
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Get Detail Resource',
-            'data'    => $author
-        ], 200);
-    }
-    public function update(Request $request, $id)
-    {
-        $author = Author::find($id);
-
-        if (!$author) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Resource not found'
-            ], 404);
-        }
-
-        $validated = $request->validate([
-            'name'  => 'required|string',
-            'photo' => 'nullable|string',
+        $data = $request->validate([
+            'name'  => 'required|string|max:255',
+            'photo' => 'nullable|string|max:255',
             'bio'   => 'nullable|string',
         ]);
 
-        $author->update($validated);
+        $author->update($data);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Resource updated successfully',
-            'data'    => $author
-        ], 200);
+        return $this->sukses($author, 'Resource updated successfully');
     }
 
-    public function destroy($id)
+    public function destroy(Author $author): JsonResponse
     {
-        $author = Author::find($id);
-
-        if (!$author) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Resource not found'
-            ], 404);
+        if ($author->books()->exists()) {
+            return $this->gagal('Author masih punya buku, tidak bisa dihapus.', 409);
         }
 
         $author->delete();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Resource deleted successfully'
-        ], 200);
+        return $this->sukses(null, 'Resource deleted successfully');
     }
 }

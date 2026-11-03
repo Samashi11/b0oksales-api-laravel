@@ -2,10 +2,19 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Author extends Model
 {
-    protected $table = 'authors';
-    protected $guarded = [];
+    use HasFactory;
+
+    protected $fillable = ['name', 'photo', 'bio'];
+
+    // satu author punya banyak buku
+    public function books(): HasMany
+    {
+        return $this->hasMany(Book::class);
+    }
 }
